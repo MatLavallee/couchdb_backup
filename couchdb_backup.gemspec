@@ -6,8 +6,8 @@ require 'couchdb_backup/version'
 Gem::Specification.new do |gem|
   gem.name          = "couchdb_backup"
   gem.version       = CouchdbBackup::VERSION
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{Backup CouchDB databases to AWS S3}
+  gem.summary       = %q{Backup CouchDB data directory to Amazon Web Services S3}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($/)

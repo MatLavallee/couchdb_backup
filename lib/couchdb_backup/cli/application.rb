@@ -3,11 +3,13 @@ require 'thor'
 module CouchdbBackup
   module Cli
     class Application < Thor
+      # TODO: Replicate database to local CouchDB
 
-      desc 'hello NAME', 'Display greeting with given NAME'
-      def hello(name)
-        puts "Hello #{name}"
-      end
+      # TODO: Compress CouchDB files
+
+      # TODO: Send compressed files to S3
+
+      # TODO: Install as a cron job (support windows?)
     end
   end
 end

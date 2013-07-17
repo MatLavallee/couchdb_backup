@@ -17,6 +17,8 @@ Gem::Specification.new do |gem|
 
   # Dependencies
   gem.add_runtime_dependency "thor"
+  gem.add_runtime_dependency "couchrest"
+  gem.add_runtime_dependency "zip"
 
   gem.add_development_dependency "rspec"
 end

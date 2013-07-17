@@ -1,5 +1,6 @@
 require 'thor'
 require 'couchrest'
+require 'fileutils'
 
 module CouchdbBackup
   module Cli
@@ -18,6 +19,10 @@ module CouchdbBackup
       end
 
       # TODO: Compress CouchDB files
+      desc "compress", "Compress"
+      def compress
+        zip_couchdb_files
+      end
 
       # TODO: Send compressed files to S3
 
@@ -28,6 +33,35 @@ module CouchdbBackup
       def get_digest(string)
         require 'digest/md5'
         Digest::MD5.hexdigest string
+      end
+
+      def is_windows
+        require 'rbconfig'
+        RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
+      end
+
+      def zip_couchdb_files
+        database_files = if is_windows
+                           '/Program Files (x86)/Apache Software Foundation/CouchDB/var/lib/couchdb/'
+                         else
+                           '/var/lib/couchdb/'
+                         end
+        zip_directory database_files
+      end
+
+      def zip_directory(directory_path)
+        temp_file = Tempfile.new "couchdb_backup"
+
+        require 'zip/zip'
+        Zip::ZipOutputStream.open temp_file.path do |zip_file|
+          Dir[File.join(temp_file.path, '**', '**')].each do |file|
+            zip_file.add file.sub(directory_path, ''), file
+          end
+        end
+
+        temp_file.close
+
+        temp_file
       end
     end
   end

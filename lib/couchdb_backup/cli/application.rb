@@ -8,11 +8,18 @@ require 'fog'
 module CouchdbBackup
   module Cli
     class Application < Thor
-      desc "backup REMOTE_DB_URL CLOUD_DIRECTORY", "Backup CouchDB data to cloud service"
-      def backup(remote_db_url, cloud_directory)
+      desc 'backup REMOTE_DB_URL AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY CLOUD_DIRECTORY',
+           'Backup CouchDB data to cloud service'
+      def backup(remote_db_url, aws_access_key_id, aws_secret_access_key, cloud_directory)
+        # Replicate DB
         replicate_database remote_db_url
+
+        # Zip data
         file = zip_couchdb_data
-        upload_cloud_backup file, cloud_directory
+
+        # Upload backup file
+        cloud_connection = cloud_connection(aws_access_key_id, aws_secret_access_key)
+        upload_cloud_backup(file, cloud_connection, cloud_directory)
       end
 
       # TODO: Restore from
@@ -60,15 +67,15 @@ module CouchdbBackup
         RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
       end
 
-      def cloud_connection
-        @cloud_connection ||= Fog::Storage.new({
-                                                   :provider => 'Local',
-                                                   :local_root => '/Temp/fog',
-                                                   :endpoint => 'http://example.com'
-                                               })
+      def cloud_connection(aws_access_key_id, aws_secret_access_key)
+        Fog::Storage.new({
+                             :provider => 'AWS',
+                             :aws_access_key_id => aws_access_key_id,
+                             :aws_secret_access_key => aws_secret_access_key
+                         })
       end
 
-      def upload_cloud_backup(file, directory_name)
+      def upload_cloud_backup(file, cloud_connection, directory_name)
         # Create or get a directory for backups
         directory = cloud_connection.directories.create(
             :key => directory_name, # globally unique name
@@ -76,11 +83,12 @@ module CouchdbBackup
 
         # Upload backup
         puts "Uploading backup to #{directory_name}"
+        start_time = Time.now
         directory.files.create(
             :key => "couchdb-backup-#{Time.now.utc.strftime('%Y-%m-%d_%H-%M-%S_UTC')}.zip",
             :body => file
         )
-        puts 'Upload completed'
+        puts "Upload completed in #{Time.now - start_time} s"
       end
     end
   end

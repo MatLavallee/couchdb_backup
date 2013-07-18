@@ -1,6 +1,7 @@
 require 'thor'
 require 'couchrest'
 require 'fileutils'
+require 'tempfile'
 require 'zip/zip'
 require 'fog'
 
@@ -39,15 +40,13 @@ module CouchdbBackup
       end
 
       def zip_couchdb_data
-        temp_file = Tempfile.new "couchdb_backup"
-
-        Zip::ZipOutputStream.open temp_file.path do |zip_file|
-          Dir[File.join(temp_file.path, '**', '**')].each do |file|
+        tempfile_path = File.join Dir.tmpdir, Dir::Tmpname.make_tmpname('couchdb_backup', '.zip')
+        Zip::ZipFile.open tempfile_path, create = true do |zip_file|
+          Dir[File.join(couchdb_data_path, '**', '**')].each do |file|
             zip_file.add file.sub(couchdb_data_path, ''), file
           end
         end
-
-        temp_file
+        File.open tempfile_path
       end
 
       def couchdb_data_path

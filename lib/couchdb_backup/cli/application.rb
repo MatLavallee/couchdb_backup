@@ -73,7 +73,7 @@ module CouchdbBackup
                                                })
       end
 
-      def cloud_execute_backup(file)
+      def upload_cloud_backup(file)
         file = File.open('/Temp/test2.zip')
 
         # Create or get a directory for backups

@@ -9,7 +9,7 @@ module CouchdbBackup
       def replicate_database(remote_db_url, local_db_url = nil)
         remote_db = CouchRest.database remote_db_url
 
-        local_db_url ||= remote_db.name + '_' + get_digest(remote_db_url)
+        local_db_url ||= remote_db.name + '_' + digest(remote_db_url)
         local_db = CouchRest.database local_db_url
 
         puts "Starting replication from \"#{remote_db_url}\" to \"#{local_db_url}\""
@@ -21,7 +21,8 @@ module CouchdbBackup
       # TODO: Compress CouchDB files
       desc "compress", "Compress"
       def compress
-        zip_couchdb_files
+        file = zip_couchdb_data
+        puts file.size
       end
 
       # TODO: Send compressed files to S3
@@ -30,9 +31,17 @@ module CouchdbBackup
 
       private
 
-      def get_digest(string)
+      def digest(string)
         require 'digest/md5'
         Digest::MD5.hexdigest string
+      end
+
+      def couchdb_data_path
+        if is_windows
+          '/Program Files (x86)/Apache Software Foundation/CouchDB/var/lib/couchdb/'
+        else
+          '/var/lib/couchdb/'
+        end
       end
 
       def is_windows
@@ -40,26 +49,15 @@ module CouchdbBackup
         RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
       end
 
-      def zip_couchdb_files
-        database_files = if is_windows
-                           '/Program Files (x86)/Apache Software Foundation/CouchDB/var/lib/couchdb/'
-                         else
-                           '/var/lib/couchdb/'
-                         end
-        zip_directory database_files
-      end
-
-      def zip_directory(directory_path)
+      def zip_couchdb_data
         temp_file = Tempfile.new "couchdb_backup"
 
         require 'zip/zip'
         Zip::ZipOutputStream.open temp_file.path do |zip_file|
           Dir[File.join(temp_file.path, '**', '**')].each do |file|
-            zip_file.add file.sub(directory_path, ''), file
+            zip_file.add file.sub(couchdb_data_path, ''), file
           end
         end
-
-        temp_file.close
 
         temp_file
       end

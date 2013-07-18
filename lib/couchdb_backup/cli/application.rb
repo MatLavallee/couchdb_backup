@@ -1,9 +1,12 @@
 require 'thor'
 require 'couchrest'
 require 'fileutils'
+require 'fog'
 
 module CouchdbBackup
   module Cli
+    CLOUD_BACKUP_DIRECTORY_KEy = 'couchdb-backups-5484848984888489'
+
     class Application < Thor
       desc "replicate_database REMOTE_DB [LOCAL_DB]", "Replicate remote database to local CouchDB"
       def replicate_database(remote_db_url, local_db_url = nil)
@@ -22,8 +25,10 @@ module CouchdbBackup
       desc "backup", "Backup CouchDB data to cloud service"
       def backup
         file = zip_couchdb_data
-        puts file.size
+        cloud_execute_backup file
       end
+
+      # TODO: Restore from
 
       # TODO: Install as a cron job (support windows?)
 
@@ -58,6 +63,29 @@ module CouchdbBackup
       def is_windows
         require 'rbconfig'
         RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
+      end
+
+      def cloud_connection
+        @cloud_connection ||= Fog::Storage.new({
+                                                   :provider => 'Local',
+                                                   :local_root => '/Temp/fog',
+                                                   :endpoint => 'http://example.com'
+                                               })
+      end
+
+      def cloud_execute_backup(file)
+        file = File.open('/Temp/test2.zip')
+
+        # Create or get a directory for backups
+        directory = cloud_connection.directories.create(
+            :key => CLOUD_BACKUP_DIRECTORY_KEy, # globally unique name
+        )
+
+        # Upload backup
+        directory.files.create(
+            :key => "couchdb-backup-#{Time.now.utc.strftime("%Y-%m-%d_%H-%M-%S_UTC")}.zip",
+            :body => file
+        )
       end
     end
   end

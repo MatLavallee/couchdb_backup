@@ -22,7 +22,19 @@ module CouchdbBackup
         upload_cloud_backup(file, cloud_connection, cloud_directory)
       end
 
-      # TODO: Restore from
+      desc 'restore REMOTE_DB_URL AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY CLOUD_DIRECTORY',
+           'Restore CouchDB data from cloud service'
+      def restore(remote_db_url, aws_access_key_id, aws_secret_access_key, cloud_directory, backup_filename)
+        # Download backup file
+        cloud_connection = cloud_connection(aws_access_key_id, aws_secret_access_key)
+        backup_file = download_cloud_backup(cloud_connection, cloud_directory, backup_filename)
+
+        ## Unzip data
+        #file = zip_couchdb_data
+        #
+        ## Replicate DB
+        #replicate_database remote_db_url
+      end
 
       # TODO: Install as a cron job (support windows?)
 
@@ -89,6 +101,19 @@ module CouchdbBackup
             :body => file
         )
         puts "Upload completed in #{Time.now - start_time} s"
+      end
+
+      def download_cloud_backup(cloud_connection, directory_name, backup_filename)
+        # Create or get a directory for backups
+        directory = cloud_connection.directories.create(
+            :key => directory_name, # globally unique name
+        )
+
+        # Download backup
+        puts "Download backup #{directory_name}/#{backup_filename}"
+        start_time = Time.now
+        directory.files.get(backup_filename)
+        puts "Download completed in #{Time.now - start_time} s"
       end
     end
   end

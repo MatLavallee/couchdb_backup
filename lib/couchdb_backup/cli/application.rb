@@ -5,8 +5,6 @@ require 'fog'
 
 module CouchdbBackup
   module Cli
-    CLOUD_BACKUP_DIRECTORY_KEy = 'couchdb-backups-5484848984888489'
-
     class Application < Thor
       desc "replicate_database REMOTE_DB [LOCAL_DB]", "Replicate remote database to local CouchDB"
       def replicate_database(remote_db_url, local_db_url = nil)
@@ -23,9 +21,9 @@ module CouchdbBackup
 
       # TODO: Send compressed files to S3
       desc "backup", "Backup CouchDB data to cloud service"
-      def backup
+      def backup(cloud_directory)
         file = zip_couchdb_data
-        upload_cloud_backup file
+        upload_cloud_backup file, cloud_directory
       end
 
       # TODO: Restore from
@@ -73,12 +71,10 @@ module CouchdbBackup
                                                })
       end
 
-      def upload_cloud_backup(file)
-        file = File.open('/Temp/test2.zip')
-
+      def upload_cloud_backup(file, directory_name)
         # Create or get a directory for backups
         directory = cloud_connection.directories.create(
-            :key => CLOUD_BACKUP_DIRECTORY_KEy, # globally unique name
+            :key => directory_name, # globally unique name
         )
 
         # Upload backup

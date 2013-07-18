@@ -36,19 +36,6 @@ module CouchdbBackup
         Digest::MD5.hexdigest string
       end
 
-      def couchdb_data_path
-        if is_windows
-          '/Program Files (x86)/Apache Software Foundation/CouchDB/var/lib/couchdb/'
-        else
-          '/var/lib/couchdb/'
-        end
-      end
-
-      def is_windows
-        require 'rbconfig'
-        RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
-      end
-
       def zip_couchdb_data
         temp_file = Tempfile.new "couchdb_backup"
 
@@ -60,6 +47,19 @@ module CouchdbBackup
         end
 
         temp_file
+      end
+
+      def couchdb_data_path
+        if is_windows
+          '/Program Files (x86)/Apache Software Foundation/CouchDB/var/lib/couchdb/'
+        else
+          '/var/lib/couchdb/'
+        end
+      end
+
+      def is_windows
+        require 'rbconfig'
+        RbConfig::CONFIG['host_os'] =~ /mswin|mingw|cygwin/
       end
     end
   end

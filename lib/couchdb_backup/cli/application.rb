@@ -79,7 +79,7 @@ module CouchdbBackup
 
         # Upload backup
         directory.files.create(
-            :key => "couchdb-backup-#{Time.now.utc.strftime("%Y-%m-%d_%H-%M-%S_UTC")}.zip",
+            :key => "couchdb-backup-#{Time.now.utc.strftime('%Y-%m-%d_%H-%M-%S_UTC')}.zip",
             :body => file
         )
       end

@@ -18,14 +18,12 @@ module CouchdbBackup
         puts "Replication completed in #{Time.now - start_time} s"
       end
 
-      # TODO: Compress CouchDB files
-      desc "compress", "Compress"
-      def compress
+      # TODO: Send compressed files to S3
+      desc "backup", "Backup CouchDB data to cloud service"
+      def backup
         file = zip_couchdb_data
         puts file.size
       end
-
-      # TODO: Send compressed files to S3
 
       # TODO: Install as a cron job (support windows?)
 

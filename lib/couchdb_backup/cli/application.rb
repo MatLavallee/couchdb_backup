@@ -25,7 +25,7 @@ module CouchdbBackup
       desc "backup", "Backup CouchDB data to cloud service"
       def backup
         file = zip_couchdb_data
-        cloud_execute_backup file
+        upload_cloud_backup file
       end
 
       # TODO: Restore from

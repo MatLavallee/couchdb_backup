@@ -8,22 +8,9 @@ require 'fog'
 module CouchdbBackup
   module Cli
     class Application < Thor
-      desc "replicate_database REMOTE_DB [LOCAL_DB]", "Replicate remote database to local CouchDB"
-      def replicate_database(remote_db_url, local_db_url = nil)
-        remote_db = CouchRest.database remote_db_url
-
-        local_db_url ||= remote_db.name + '_' + digest(remote_db_url)
-        local_db = CouchRest.database local_db_url
-
-        puts "Starting replication from \"#{remote_db_url}\" to \"#{local_db_url}\""
-        start_time = Time.now
-        remote_db.replicate_to local_db, continuous = false, create_target = true
-        puts "Replication completed in #{Time.now - start_time} s"
-      end
-
-      # TODO: Send compressed files to S3
-      desc "backup", "Backup CouchDB data to cloud service"
-      def backup(cloud_directory)
+      desc "backup REMOTE_DB_URL CLOUD_DIRECTORY", "Backup CouchDB data to cloud service"
+      def backup(remote_db_url, cloud_directory)
+        replicate_database remote_db_url
         file = zip_couchdb_data
         upload_cloud_backup file, cloud_directory
       end
@@ -33,6 +20,17 @@ module CouchdbBackup
       # TODO: Install as a cron job (support windows?)
 
       private
+      def replicate_database(remote_db_url)
+        remote_db = CouchRest.database remote_db_url
+
+        local_db_url = remote_db.name + '_' + digest(remote_db_url)
+        local_db = CouchRest.database local_db_url
+
+        puts "Starting replication from \"#{remote_db_url}\" to \"#{local_db_url}\""
+        start_time = Time.now
+        local_db.replicate_from remote_db, continuous = false, create_target = true
+        puts "Replication completed in #{Time.now - start_time} s"
+      end
 
       def digest(string)
         require 'digest/md5'
@@ -77,10 +75,12 @@ module CouchdbBackup
         )
 
         # Upload backup
+        puts "Uploading backup to #{directory_name}"
         directory.files.create(
             :key => "couchdb-backup-#{Time.now.utc.strftime('%Y-%m-%d_%H-%M-%S_UTC')}.zip",
             :body => file
         )
+        puts 'Upload completed'
       end
     end
   end

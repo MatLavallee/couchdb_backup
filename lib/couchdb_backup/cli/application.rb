@@ -29,9 +29,9 @@ module CouchdbBackup
         cloud_connection = cloud_connection(aws_access_key_id, aws_secret_access_key)
         backup_file = download_cloud_backup(cloud_connection, cloud_directory, backup_filename)
 
-        ## Unzip data
-        #file = zip_couchdb_data
-        #
+        # Unzip data
+        unzip_couchdb_data backup_file
+
         ## Replicate DB
         #replicate_database remote_db_url
       end
@@ -64,6 +64,20 @@ module CouchdbBackup
           end
         end
         File.open tempfile_path
+      end
+
+      def unzip_couchdb_data(file)
+        # Delete CouchDB data files
+        FileUtils.remove_dir couchdb_data_path
+        puts couchdb_data_path
+
+        #tempfile_path = File.join Dir.tmpdir, Dir::Tmpname.make_tmpname('couchdb_backup', '.zip')
+        #Zip::ZipFile.open tempfile_path, create = true do |zip_file|
+        #  Dir[File.join(couchdb_data_path, '**', '**')].each do |file|
+        #    zip_file.add file.sub(couchdb_data_path, ''), file
+        #  end
+        #end
+        #File.open tempfile_path
       end
 
       def couchdb_data_path

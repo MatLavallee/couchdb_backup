@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+# -*- mode: ruby -*-
+
+require 'couchdb_backup'
+CouchdbBackup::Cli::Application.start(ARGV)
